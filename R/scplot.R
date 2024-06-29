@@ -7,29 +7,33 @@
 #'  and information about the plot style (element `theme`).
 #' @author Juergen Wilbert
 #' @export
-
 scplot <- function(scdf) {
 
-  scan:::check_args(
+  check_args(
     by_class(scdf, "scdf")
   )
 
   theme <- .scplot_themes[["default"]]
 
+  caption <- format_caption(
+    scdf_attr(scdf)$info,
+    scdf_attr(scdf)$author
+  )
+
   out <- list(
     scdf = scdf,
-    dvar = scan::scdf_attr(scdf, scan:::opt("dv")),
-    pvar = scan::scdf_attr(scdf, scan:::opt("phase")),
-    mvar = scan::scdf_attr(scdf, scan:::opt("mt")),
+    dvar = scdf_attr(scdf)$var.values,
+    pvar = scdf_attr(scdf)$var.phase,
+    mvar = scdf_attr(scdf)$var.mt,
     datalines = list(list(type = "continuous")),
     statlines = NULL,
     ridges = NULL,
     marks = NULL,
     texts = NULL,
-    arrows = NULL,
+    lines = NULL,
     theme = theme,
     title = NULL,
-    caption = NULL,
+    caption = caption,
     xaxis = list(lim = NULL, inc = 1),
     yaxis = list(lim = NULL),
     xlabel = NULL,
@@ -61,3 +65,34 @@ revise_names <- function(x, n) {
 
   x
 }
+
+format_caption <- function(info, author, width = 100) {
+  caption <- NULL
+
+  if (!is.null(info)) caption <- info
+
+  if (!is.null(author)) {
+    if (is.null(caption)) {
+      caption <- paste0("Source: ", author)
+      caption <- paste(strwrap(caption, width = width), collapse = "\n")
+    } else {
+      caption <- paste0(
+        caption,
+        "\nSource: ",
+        author
+      )
+    }
+
+  }
+
+  if (!is.null(caption))  {
+    caption <- paste0(
+      "Note.\n",
+      paste0(strwrap(caption, width = 100), collapse = "\n")
+    )
+  }
+
+  caption
+}
+
+

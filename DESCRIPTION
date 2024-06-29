@@ -1,11 +1,11 @@
 Package: scplot
 Type: Package
 Title: Plot Function for Single-Case Data Frames
-Version: 0.3.3
-Date: 2023-6-03
+Version: 0.4.0
+Date: 2024-06-29
 Authors@R: 
     person("Juergen", "Wilbert", 
-    email = "juergen.wilbert@uni-potsdam.de", 
+    email = "juergen.wilbert@uni-muenster.de", 
     role = c("aut", "cre"),
     comment = c(ORCID = "0000-0002-8392-2873"))
 Description: Add-on for the 'scan' package that creates plots 
@@ -20,10 +20,10 @@ Imports: ggplot2, scan (>= 0.57.0), stats, utils, mblm
 Suggests: rmarkdown, knitr
 License: GPL (>= 3)
 Encoding: UTF-8
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 NeedsCompilation: no
-Packaged: 2023-06-03 08:41:03 UTC; jurgenwilbert
+Packaged: 2024-06-29 08:45:46 UTC; wilbert
 Author: Juergen Wilbert [aut, cre] (<https://orcid.org/0000-0002-8392-2873>)
-Maintainer: Juergen Wilbert <juergen.wilbert@uni-potsdam.de>
+Maintainer: Juergen Wilbert <juergen.wilbert@uni-muenster.de>
 Repository: CRAN
-Date/Publication: 2023-06-03 09:00:02 UTC
+Date/Publication: 2024-06-29 22:40:11 UTC

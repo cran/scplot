@@ -30,9 +30,18 @@ as_ggplot <- function(scplot) {
 
   if (!identical(scplot$phasenames$labels, ".default")) {
     for(i in seq_along(scdf)) {
+      scdf[[i]][[pvar]] <- factor(scdf[[i]][[pvar]])
       levels(scdf[[i]][[pvar]]) <- scplot$phasenames$labels
     }
   }
+
+  for(i in seq_along(scdf)) {
+    scdf[[i]][[pvar]] <- rename_phase_duplicates(
+      rle(as.character(scdf[[i]][[pvar]]))$values,
+      rle(as.character(scdf[[i]][[pvar]]))$lengths
+    )
+  }
+
 
   # convert to long format --------
 
@@ -233,6 +242,7 @@ as_ggplot <- function(scplot) {
         ),
         linewidth = theme$dataline[[i]]$linewidth,
         linetype = theme$dataline[[i]]$linetype
+        #na.rm = TRUE
       )
     }
 
@@ -272,6 +282,7 @@ as_ggplot <- function(scplot) {
         colour = theme$datapoint[[i]]$colour,
         size = theme$datapoint[[i]]$size,
         shape = theme$datapoint[[i]]$shape
+        #na.rm = TRUE
       )
     }
 
@@ -567,6 +578,7 @@ as_ggplot <- function(scplot) {
         color = scplot$marks[[i]]$color,
         size = scplot$marks[[i]]$size,
         shape = scplot$marks[[i]]$shape
+        #na.rm = TRUE
       )
     }
 
@@ -598,30 +610,65 @@ as_ggplot <- function(scplot) {
   }
 
 
-  # add arrows ---------
+  # add lines ---------
 
-  if (length(scplot$arrows) > 0) {
-    for(i in seq_along(scplot$arrows)) {
+  if (length(scplot$lines) > 0) {
+    for(i in seq_along(scplot$lines)) {
+
+      if (!is.null(scplot$lines[[i]]$hline)) {
+        data_hline <- data.frame(
+          case = unique(data_long$case)[scplot$lines[[i]]$case],
+          y = scplot$lines[[i]]$hline
+        )
+        p <- p + geom_hline(
+          data = data_hline,
+          aes(yintercept = y),
+          linetype = scplot$lines[[i]]$linetype,
+          color = scplot$lines[[i]]$colour,
+          linewidth = scplot$lines[[i]]$linewidth
+        )
+        next
+      }
+
+      if (!is.null(scplot$lines[[i]]$vline)) {
+        data_vline <- data.frame(
+          case = unique(data_long$case)[scplot$lines[[i]]$case],
+          x = scplot$lines[[i]]$vline
+        )
+        p <- p + geom_vline(
+          data = data_vline,
+          aes(xintercept = x),
+          linetype = scplot$lines[[i]]$linetype,
+          color = scplot$lines[[i]]$colour,
+          linewidth = scplot$lines[[i]]$linewidth
+        )
+        next
+      }
+
       dat <- data.frame(
-        x0 = scplot$arrows[[i]]$x0,
-        y0 = scplot$arrows[[i]]$y0,
-        x1 = scplot$arrows[[i]]$x1,
-        y1 = scplot$arrows[[i]]$y1,
-        case = unique(data_long$case)[scplot$arrows[[i]]$case]
+        x0 = scplot$lines[[i]]$x0,
+        y0 = scplot$lines[[i]]$y0,
+        x1 = scplot$lines[[i]]$x1,
+        y1 = scplot$lines[[i]]$y1,
+        case = unique(data_long$case)[scplot$lines[[i]]$case]
       )
 
-      arrow_par <- arrow(
-        scplot$arrows[[i]]$angle,
-        scplot$arrows[[i]]$length,
-        scplot$arrows[[i]]$ends,
-        scplot$arrows[[i]]$type
-      )
+      if (scplot$lines[[i]]$arrow) {
+        arrow_par <- arrow(
+          scplot$lines[[i]]$angle,
+          scplot$lines[[i]]$length,
+          scplot$lines[[i]]$ends,
+          scplot$lines[[i]]$type
+        )
+      } else {
+        arrow_par <- NULL
+      }
 
       p <- p + geom_segment(
         data = dat,
         mapping = aes(x = x0, y = y0, xend = x1, yend = y1),
-        colour = scplot$arrows[[i]]$colour,
-        size = scplot$arrows[[i]]$size,
+        colour = scplot$lines[[i]]$colour,
+        size = scplot$lines[[i]]$size,
         arrow = arrow_par
       )
     }
@@ -690,3 +737,18 @@ as_ggplot <- function(scplot) {
 
   p
 }
+
+rename_phase_duplicates <- function(phase_labels, phase_lengths) {
+  while(TRUE) {
+    id <- duplicated(phase_labels)
+    if (all(!id)) break
+    phase_labels[id] <- paste0(phase_labels[id], " ")
+  }
+  mapply(
+    function(x,y) rep(x, y),
+    x = phase_labels,
+    y = phase_lengths,
+    SIMPLIFY = FALSE
+  ) |> unlist() |> unname() |> as.factor()
+}
+
