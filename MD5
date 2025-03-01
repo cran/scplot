@@ -1,6 +1,6 @@
-2d5b27138f2ed545159cca5967c453d1 *DESCRIPTION
+a725a039fe87137ab6144f547e7f3062 *DESCRIPTION
 868cc249fed218913eb4a890a99260a0 *NAMESPACE
-cd191a83fd638289e1fac8fff20fd24c *NEWS.md
+1ca2e7d1881739fd338bfd2a84f8d1be *NEWS.md
 64f23e3aef52d62f6746b448b3201b53 *R/add_arrow.R
 211136a8b1f487309e8f663f13f20a9e *R/add_grid.R
 161306a83799974a37189e2bed439865 *R/add_labels.R
@@ -27,7 +27,7 @@ f40eec552b914b4466bbd7ac358fe8ff *R/private-themes.R
 ae827460f7d4e9565eb3dd890d47e053 *R/scplot-package.R
 9784ee3ae53da6a127363e334dc7f4bf *R/scplot.R
 01b87cea71f42a22e34449ad0d2c1a28 *R/scplot.sc_hplm.R
-cfcb1518609fc50f3ce0c251973ed726 *R/scplot.sc_rand.R
+8f2fabd459ab5ba61e06ab7a514f0667 *R/scplot.sc_rand.R
 3c96ddd3dc61c7ac73331e50df61e1e0 *R/scplot.sc_tauu.R
 09a25463f3d88331dd16facdc5b72b3a *R/set_base_text.R
 72e7f6149eaf2bbddd8026b9b1c6db7b *R/set_casenames.R
