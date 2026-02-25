@@ -4,10 +4,10 @@
 \name{reexports}
 \alias{reexports}
 \alias{unit}
-\alias{\%>\%}
 \alias{element_line}
 \alias{element_text}
 \alias{element_rect}
+\alias{element_point}
 \title{Objects exported from other packages}
 \keyword{internal}
 \description{
@@ -15,8 +15,6 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{ggplot2}{\code{\link[ggplot2:element]{element_line}}, \code{\link[ggplot2:element]{element_rect}}, \code{\link[ggplot2:element]{element_text}}, \code{\link[ggplot2:reexports]{unit}}}
-
-  \item{scan}{\code{\link[scan:pipe]{\%>\%}}}
+  \item{ggplot2}{\code{\link[ggplot2:element]{element_line}}, \code{\link[ggplot2:element]{element_point}}, \code{\link[ggplot2:element]{element_rect}}, \code{\link[ggplot2:element]{element_text}}, \code{\link[ggplot2:reexports]{unit}}}
 }}
 
