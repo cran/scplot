@@ -1,13 +1,16 @@
 #' Creates a ggplot2 object from an [scplot()] object
 #'
-#' @description
-#' `as_ggplot()` takes an `scplot` object as input and returns a `ggplot2`
-#'  object.
+#' @description `as_ggplot()` takes an `scplot` object as input and returns a
+#' `ggplot2` object.
 #'
-#' @param scplot An `scplot` object
-#'
-#' @details `as_ggplot()` is used directly when you want to return a ggplot2 object for
-#'   further use with external ggplot functions.
+#' @param scplot An `scplot` object.
+#' @seealso [scplot()], [print.scplot()]
+#' @author Juergen Wilbert
+#' @details `as_ggplot()` is used directly when you want to return a ggplot2
+#'   object for further use with external ggplot functions. It is also used
+#'   internally when printing an `scplot` object (see [print.scplot()]). The
+#'   function processes the data and theme specifications from the `scplot`
+#'   object and constructs a ggplot2 plot accordingly.
 #' @return A `ggplot2` plot object.
 #' @export
 as_ggplot <- function(scplot) {
@@ -25,9 +28,9 @@ as_ggplot <- function(scplot) {
   n_cases <- length(scdf)
 
   # rename casesnames --------
-
+  scplot$casenames$labels <- rep(scplot$casenames$labels, length = n_cases)
   id <- which(duplicated(scplot$casenames$labels))
-  if (length(id) > 0) scplot$casenames$labels[id] <- paste0(".case ", id)
+  if (length(id) > 0) scplot$casenames$labels[id] <- paste0(scplot$casenames$labels[id]," case ", id)
   names(scdf) <- scplot$casenames$labels
 
   # rename phasenames ----------
@@ -46,7 +49,6 @@ as_ggplot <- function(scplot) {
     )
   }
 
-
   # convert to long format --------
 
   data_long <- as.data.frame(scdf)
@@ -55,7 +57,7 @@ as_ggplot <- function(scplot) {
 
   attr(data_long, "pvar") <- pvar
   attr(data_long, "mvar") <- mvar
-
+  attr(data_long, "dvar") <- dvar
 
   # extract design --------
 
@@ -70,36 +72,6 @@ as_ggplot <- function(scplot) {
   }
 
   design <- lapply(scdf, .design, pvar = pvar, mvar = mvar)
-
-  # set dataline for first dvar ---------------------
-
-  scplot$datalines[[1]]$variable <- scplot$dvar[1]
-
-  # set data and statline labels for legend -----
-
-  for (i in seq_along(scplot$datalines)) {
-    if (is.null(scplot$datalines[[i]]$label)) {
-      scplot$datalines[[i]]$label <- scplot$datalines[[i]]$variable
-    }
-  }
-
-  for (i in seq_along(scplot$statlines)) {
-
-    if (is.null(scplot$statlines[[i]]$label)) {
-      if (identical(scplot$statlines[[i]]$variable, ".dvar")) {
-        scplot$statlines[[i]]$variable <- dvar[1]
-      }
-      scplot$statlines[[i]]$label <-paste(
-        scplot$statlines[[i]]$stat,
-        scplot$statlines[[i]]$variable
-      )
-    }
-
-  }
-
-
-
-
 
   # set x/y label --------
 
@@ -138,7 +110,7 @@ as_ggplot <- function(scplot) {
 
   p <- ggplot(
     data = data_long,
-    aes(x = !!sym(mvar))
+    aes(x = .data[[mvar]])
   )
 
   p <- p + theme_void(base_size = base_size)
@@ -171,7 +143,7 @@ as_ggplot <- function(scplot) {
   }
 
   p <- p + scale_x_continuous(
-    breaks = x, #seq(xlim[1], xlim[2], scplot$xaxis$inc),
+    breaks = x,
     limits = c(xlim[1], xlim[2]),
     expand = theme$axis.expand.x
   )
@@ -262,16 +234,32 @@ as_ggplot <- function(scplot) {
 
   # add dataline and points ---------------------------
 
+  scplot$datalines[[1]]$variable <- scplot$dvar[1]
+
   for (i in seq_along(scplot$datalines)) {
+
+    if (is.null(scplot$datalines[[i]]$label)) {
+      scplot$datalines[[i]]$label <- scplot$datalines[[i]]$variable
+    }
+
     if(scplot$datalines[[i]]$type == "continuous") {
+      show_gaps <- scplot$datalines[[i]]$show_gaps
+      if (is.null(show_gaps) || isTRUE(show_gaps)) {
+        df_line <- data_long
+      } else {
+        df_line <- data_long[!is.na(data_long[[scplot$datalines[[i]]$variable]]), ]
+      }
+
       p <- p + geom_line(
-        aes(
+        mapping = aes(
           y = !!as.name(scplot$datalines[[i]]$variable),
           group = !!as.name(pvar),
           colour = !!scplot$datalines[[i]]$label
         ),
+        data = df_line,
         linewidth = theme$dataline[[i]]$linewidth,
-        linetype = theme$dataline[[i]]$linetype
+        linetype = theme$dataline[[i]]$linetype,
+        na.rm = TRUE
       )
     }
 
@@ -283,7 +271,8 @@ as_ggplot <- function(scplot) {
           colour = !!scplot$datalines[[i]]$label#!!theme$dataline[[i]]$colour
         ),
         linewidth = theme$dataline[[i]]$linewidth,
-        linetype = theme$dataline[[i]]$linetype
+        linetype = theme$dataline[[i]]$linetype,
+        na.rm = TRUE
       )
     }
 
@@ -299,19 +288,20 @@ as_ggplot <- function(scplot) {
         stat = "identity",
         #position = position_nudge(x = 0.5),
         width = theme$dataline[[i]]$linewidth,
-        linetype = theme$dataline[[i]]$linetype
+        linetype = theme$dataline[[i]]$linetype,
+        na.rm = TRUE
       )
     }
 
     # add datapoints
 
-    if (!identical(theme$datapoint[[i]], "none")) {
+    if (!identical(theme$datapoint[[i]]@colour, "none")) {
       p <- p + geom_point(
         aes(y = !!sym(scplot$datalines[[i]]$variable)),
         colour = theme$datapoint[[i]]$colour,
         size = theme$datapoint[[i]]$size,
-        shape = theme$datapoint[[i]]$shape
-        #na.rm = TRUE
+        shape = theme$datapoint[[i]]$shape,
+        na.rm = TRUE
       )
     }
 
@@ -434,31 +424,43 @@ as_ggplot <- function(scplot) {
     x = unlist(lapply(design, function(x) x$stop_mt[-length(x$stop_mt)] + 0.5))
   )
 
-  p <- p + geom_vline(
-    data = data_phase,
-    aes(xintercept = x),
-    linetype = theme$separators$linetype,
-    color = theme$separators$colour,
-    linewidth = theme$separators$linewidth
-  )
+  if (!theme$separators.staircase) {
+    p <- p + geom_vline(
+      data = data_phase,
+      aes(xintercept = x),
+      linetype = theme$separators$linetype,
+      color = theme$separators$colour,
+      linewidth = theme$separators$linewidth
+    )
+  }
 
   p <- p + coord_cartesian(clip = "off")
+
+  # prepare add_staircase ------
+  if (theme$separators.staircase) {
+    attr(p, "scplot_staircase") <- list(
+      linetype = theme$separators$linetype,
+      color = theme$separators$colour,
+      linewidth = theme$separators$linewidth,
+      data = data_phase
+    )
+  }
 
   # add phasenames ---------
 
   if (!identical(theme$phasenames.position.x, "none")) {
 
-    if (theme$phasenames.position.x == "centre") {
-      x <- lapply(design, function(x) (x$stop_mt - x$start_mt) / 2 + x$start_mt)
+    if (theme$phasenames.position.x %in% c("center", "centre")) {
+      x <- lapply(design, function(.x) (.x$stop_mt - .x$start_mt) / 2 + .x$start_mt)
     }
 
     if (theme$phasenames.position.x == "left") {
-      x <- lapply(design, function(x) x$start_mt)
+      x <- lapply(design, function(.x) .x$start_mt)
     }
 
     data_phasenames <- data.frame(
-      case = rep(names(design), sapply(design, function(x) length(x$values))),
-      phase = unlist(lapply(design, function(x) x$values)),
+      case = rep(names(design), sapply(design, function(.x) length(.x$values))),
+      phase = lapply(design, function(.x) .x$values) |> unlist(),
       x = unlist(x)
     )
 
@@ -519,51 +521,24 @@ as_ggplot <- function(scplot) {
   if (!is.null(scplot$statlines)) {
 
     for(j in 1:length(scplot$statlines)) {
+
+      if (identical(scplot$statlines[[j]]$variable, ".dvar"))
+        scplot$statlines[[j]]$variable <- dvar[1]
+
+      scplot$statlines[[j]]$label <- gsub(
+        ".dvar", scplot$statlines[[j]]$variable, scplot$statlines[[j]]$label
+      )
+
       scplot$statlines[[j]]$line <- theme$statline[[j]]
       if (scplot$statlines[[j]]$variable == ".dvar") {
         scplot$statlines[[j]]$variable <- scplot$dvar[1]
       }
-
-      # by constant
-      .constant_stats <- c(
-        "mean", "median", "min", "max", "quantile", "sd", "mad"
+      p <- p + .add_statline(
+        data_long,
+        line = scplot$statlines[[j]]
       )
-      if (scplot$statlines[[j]]$stat %in% .constant_stats) {
-
-        p <- p + .statline_constant(
-          data_long,
-          line = scplot$statlines[[j]],
-          fun = scplot$statlines[[j]]$stat,
-          reference_phase = scplot$statlines[[j]]$phase
-        )
-      }
-
-      # trend
-      if (scplot$statlines[[j]]$stat == "trend") {
-        p <- p + .statline_trend_by_phase(
-          data_long,
-          line = scplot$statlines[[j]]
-        )
-      }
-
-      # by continuous
-      .continuous_stats <- c(
-        "moving mean", "movingMean", "moving median", "movingMedian",
-        "trendA", "trendA (Theil-Sen)", "trendA_bisplit", "trendA_trisplit",
-        "trendA bisplit", "trendA trisplit", "trendA theil-sen",
-        "loreg", "lowess", "loess"
-      )
-      if (scplot$statlines[[j]]$stat %in% .continuous_stats) {
-        p <- p + .statline_continuous(
-          data_long,
-          line = scplot$statlines[[j]],
-          fun = scplot$statlines[[j]]$stat
-        )
-      }
-
     }
   }
-
 
   # plot background --------------------------------------------------------
 
@@ -715,16 +690,12 @@ as_ggplot <- function(scplot) {
   labels <- unlist(lapply(scplot$datalines, function(x) x$label))
 
   if (!is.null(scplot$statlines)) {
-
-    labels_statlines <- unlist(lapply(scplot$statlines, function(x) x$label))
+    labels_statlines <- sapply(scplot$statlines, function(.x) .x$label)
     labels <- c(labels, labels_statlines)
     .color <- c(
       .color,
-      unlist(
-        lapply(theme$statline[seq_along(scplot$statlines)], function(x) x$colour)
-      )
+      sapply(theme$statline[seq_along(scplot$statlines)], function(.x) .x$colour)
     )
-
   }
 
   p <- p + scale_colour_manual(values = setNames(.color, labels))

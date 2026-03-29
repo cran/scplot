@@ -11,6 +11,6 @@ bibentry(
   textVersion  =  paste0(
     "Wilbert, J. (2026). ",
     "scplot - Single-Case Data Plots. ",
-    "(0.6.1) [English]. CRAN. https://CRAN.R-project.org/package=scplot"
+    "(0.7.0) [English]. CRAN. https://CRAN.R-project.org/package=scplot"
   )
 )

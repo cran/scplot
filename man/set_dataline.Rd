@@ -12,6 +12,7 @@ set_dataline(
   point,
   type = "continuous",
   label = NULL,
+  show_gaps = FALSE,
   ...
 )
 
@@ -21,8 +22,8 @@ add_dataline(...)
 \item{object}{An scplot object (class \code{scplot}) returned from the \code{scplot()}
 function.}
 
-\item{variable}{String. The name of a new variable for adding a new line. If
-left empty, the aesthetics of the default data line are changed.}
+\item{variable}{Character with the name of a new variable for adding a new
+line. If left empty, the aesthetics of the default data line are changed.}
 
 \item{line}{List with line parameters (\verb{"colour", "linewidth", "linetype", "lineend", "arrow"}). See \code{\link[=element_line]{element_line()}}.}
 
@@ -34,28 +35,31 @@ should be treated.}
 
 \item{label}{A character string which is used to set the label in a legend.}
 
-\item{...}{As a shortcut, arguments passed hear are bundled as \code{line}
+\item{show_gaps}{Logical. If TRUE, missing values in the data will result in
+gaps in the line. If FALSE, missing values will be ignored and the line
+will be drawn continuously.}
+
+\item{...}{As a shortcut, arguments passed here are bundled as \code{line}
 arguments (see \code{\link[=element_line]{element_line()}}).}
 }
 \value{
-An object of class \code{scplot} (see\code{\link[=scplot]{scplot()}}) with a changed \code{datalines}
-element.
+An object of class \code{scplot} (see\code{\link[=scplot]{scplot()}}) with a changed
+\code{datalines} element.
 }
 \description{
 Either set aesthetics of the default data line or add another data line.
-The function allows customization of data lines by passing arguments
-similar to those used in \code{element_line()} and \code{element_point()}, such as
-\code{color}, \code{size}, and \code{linetype}.
 }
 \details{
-If \code{variable} is left empty or set to \code{".dvar"}, the aesthetics of the
-default data line are changed. Otherwise, a new data line is added for the
-specified variable.
+The function allows customization of data lines by passing arguments such as
+\code{color}, \code{size}, and \code{linetype}. If \code{variable} is left empty or set to
+\code{".dvar"}, the aesthetics of the default data line are changed. Otherwise, a
+new data line is added for the specified variable.
 }
 \examples{
 data(exampleAB_add, package = "scan")
 scplot(exampleAB_add)  |>
-  set_dataline("depression", color = "darkblue")
+  set_dataline("depression", color = "darkblue") |>
+  set_dataline(color = "darkgreen", point = list(shape = 5, size = 3))
 }
 \seealso{
 \code{\link[=element_line]{element_line()}}, \code{\link[=element_point]{element_point()}}
